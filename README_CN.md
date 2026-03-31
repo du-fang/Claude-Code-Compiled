@@ -84,7 +84,7 @@
 ### 编译
 
 ```bash
-git clone git@github.com:roger2ai/Claude-Code-Compiled.git
+git clone https://github.com/roger2ai/Claude-Code-Compiled.git
 cd Claude-Code-Compiled
 
 # 安装依赖

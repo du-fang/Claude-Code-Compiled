@@ -84,7 +84,7 @@ Two Anthropic-internal packages that can't be installed from npm:
 ### Build
 
 ```bash
-git clone git@github.com:roger2ai/Claude-Code-Compiled.git
+git clone https://github.com/roger2ai/Claude-Code-Compiled.git
 cd Claude-Code-Compiled
 
 # Install dependencies
