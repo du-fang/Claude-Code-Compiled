@@ -1,0 +1,2 @@
+// runtimeTypes stub
+export {}

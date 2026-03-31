@@ -1,0 +1,2 @@
+// coreTypes generated stub
+export {}
