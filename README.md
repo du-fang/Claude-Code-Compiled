@@ -1,257 +1,172 @@
-# Claude Code — Leaked Source (2026-03-31)
+# Claude Code — Compiled & Fixed
 
-> **On March 31, 2026, the full source code of Anthropic's Claude Code CLI was leaked** via a `.map` file exposed in their npm registry.
-
----
-
-## How It Leaked
-
-[Chaofan Shou (@Fried_rice)](https://x.com/Fried_rice) discovered the leak and posted it publicly:
-
-> **"Claude code source code has been leaked via a map file in their npm registry!"**
->
-> — [@Fried_rice, March 31, 2026](https://x.com/Fried_rice/status/2038894956459290963)
-
-The source map file in the published npm package contained a reference to the full, unobfuscated TypeScript source, which was downloadable as a zip archive from Anthropic's R2 storage bucket.
+A working, buildable version of the [Claude Code](https://github.com/anthropics/claude-code) CLI, reconstructed from the leaked source (2026-03-31) with all missing files, broken imports, and runtime errors fixed.
 
 ---
 
-## Overview
+## What This Is
 
-Claude Code is Anthropic's official CLI tool that lets you interact with Claude directly from the terminal to perform software engineering tasks — editing files, running commands, searching codebases, managing git workflows, and more.
+On March 31, 2026, the full source code of Anthropic's Claude Code CLI was leaked via a `.map` file in their npm registry. The original leak is **not buildable** — it's missing 22+ source files, has broken internal imports, uses Anthropic-internal packages, and relies on unreleased Bun features (`bun:bundle`).
 
-This repository contains the leaked `src/` directory.
-
-- **Leaked on**: 2026-03-31
-- **Language**: TypeScript
-- **Runtime**: Bun
-- **Terminal UI**: React + [Ink](https://github.com/vadimdemedes/ink) (React for CLI)
-- **Scale**: ~1,900 files, 512,000+ lines of code
+This repo fixes all of that. The result: a single `bun build` command that produces a working ~23MB bundle.
 
 ---
 
-## Directory Structure
+## Changes From the Original Leak
 
-```
-src/
-├── main.tsx                 # Entrypoint (Commander.js-based CLI parser)
-├── commands.ts              # Command registry
-├── tools.ts                 # Tool registry
-├── Tool.ts                  # Tool type definitions
-├── QueryEngine.ts           # LLM query engine (core Anthropic API caller)
-├── context.ts               # System/user context collection
-├── cost-tracker.ts          # Token cost tracking
-│
-├── commands/                # Slash command implementations (~50)
-├── tools/                   # Agent tool implementations (~40)
-├── components/              # Ink UI components (~140)
-├── hooks/                   # React hooks
-├── services/                # External service integrations
-├── screens/                 # Full-screen UIs (Doctor, REPL, Resume)
-├── types/                   # TypeScript type definitions
-├── utils/                   # Utility functions
-│
-├── bridge/                  # IDE integration bridge (VS Code, JetBrains)
-├── coordinator/             # Multi-agent coordinator
-├── plugins/                 # Plugin system
-├── skills/                  # Skill system
-├── keybindings/             # Keybinding configuration
-├── vim/                     # Vim mode
-├── voice/                   # Voice input
-├── remote/                  # Remote sessions
-├── server/                  # Server mode
-├── memdir/                  # Memory directory (persistent memory)
-├── tasks/                   # Task management
-├── state/                   # State management
-├── migrations/              # Config migrations
-├── schemas/                 # Config schemas (Zod)
-├── entrypoints/             # Initialization logic
-├── ink/                     # Ink renderer wrapper
-├── buddy/                   # Companion sprite (Easter egg)
-├── native-ts/               # Native TypeScript utils
-├── outputStyles/            # Output styling
-├── query/                   # Query pipeline
-└── upstreamproxy/           # Proxy configuration
-```
+### Missing Source Files Added (22 stubs)
+
+The leaked source references files that don't exist in the package. These have been created as functional stubs:
+
+| File | Purpose |
+|------|---------|
+| `src/global.d.ts` | TypeScript global declarations |
+| `src/utils/protectedNamespace.ts` | Namespace protection |
+| `src/utils/useEffectEvent.ts` | React `useEffectEvent` polyfill |
+| `src/entrypoints/sdk/coreTypes.generated.ts` | SDK generated types |
+| `src/entrypoints/sdk/runtimeTypes.ts` | SDK runtime types |
+| `src/entrypoints/sdk/toolTypes.ts` | SDK tool types |
+| `src/tools/REPLTool/REPLTool.ts` | REPL tool stub |
+| `src/tools/SuggestBackgroundPRTool/` | PR suggestion stub |
+| `src/tools/VerifyPlanExecutionTool/` | Plan verification stub |
+| `src/tools/WorkflowTool/` | Workflow tool stub |
+| `src/tools/TungstenTool/TungstenLiveMonitor.tsx` | Tungsten monitor stub |
+| `src/commands/agents-platform/` | Agent platform command stub |
+| `src/commands/assistant/` | Assistant command stub |
+| `src/components/agents/SnapshotUpdateDialog.tsx` | Snapshot dialog stub |
+| `src/assistant/AssistantSessionChooser.tsx` | Session chooser stub |
+| `src/services/compact/snipCompact.ts` | Snip compact stub |
+| `src/services/compact/cachedMicrocompact.ts` | Microcompact stub |
+| `src/services/contextCollapse/` | Context collapse stub |
+| `src/ink/devtools.ts` | Devtools stub |
+| `src/skills/bundled/verify/` | Verify skill stub |
+| `src/utils/filePersistence/types.ts` | File persistence types stub |
+
+### Source Code Fixes
+
+| Fix | File(s) | Description |
+|-----|---------|---------|
+| `useEffectEvent` import | `src/components/tasks/BackgroundTasksDialog.tsx`, `src/state/AppState.tsx` | React 19 experimental hook not available in `react-reconciler@0.31` — moved to local polyfill |
+| Version check skip | `src/utils/autoUpdater.ts` | `assertMinVersion()` calls Anthropic servers — bypassed |
+| Org validation skip | `src/main.tsx` | `validateForceLoginOrg()` requires Anthropic auth — commented out |
+| Auth check skip | `src/main.tsx` | Login flow requires Anthropic OAuth — auto-execute enabled |
+| `SandboxManager` stub | `node_modules/@anthropic-ai/sandbox-runtime/` | Replaced minimal 14-method stub with real implementation from [anthropic-experimental/sandbox-runtime](https://github.com/anthropic-experimental/sandbox-runtime) |
+
+### Shim Files (Bun compatibility)
+
+| File | Purpose |
+|------|---------|
+| `shims/macro.ts` | Provides `MACRO` global (VERSION, BUILD_TIME, etc.) — normally injected by Anthropic's Bun build |
+| `shims/bun-bundle.ts` | Provides `feature()` function stub — replaces `bun:bundle` which is Anthropic-internal |
+
+### Missing Dependencies (28 packages added)
+
+The original `package.json` was incomplete. 28 missing dependencies have been added, including `@anthropic-ai/` SDKs, OpenTelemetry packages, and other required modules.
+
+### Internal Package Stubs
+
+Two Anthropic-internal packages that can't be installed from npm:
+
+- `@anthropic-ai/sandbox-runtime` — replaced with [real open-source implementation](https://github.com/anthropic-experimental/sandbox-runtime)
+- `@ant/claude-for-chrome-mcp` — stubbed in `node_modules/`
 
 ---
 
-## Core Architecture
+## Quick Start
 
-### 1. Tool System (`src/tools/`)
+### Prerequisites
 
-Every tool Claude Code can invoke is implemented as a self-contained module. Each tool defines its input schema, permission model, and execution logic.
+- **Bun** 1.3+ — `curl -fsSL https://bun.sh/install | bash`
+- **Node.js** 18+ (optional, Bun includes npm)
 
-| Tool | Description |
-|---|---|
-| `BashTool` | Shell command execution |
-| `FileReadTool` | File reading (images, PDFs, notebooks) |
-| `FileWriteTool` | File creation / overwrite |
-| `FileEditTool` | Partial file modification (string replacement) |
-| `GlobTool` | File pattern matching search |
-| `GrepTool` | ripgrep-based content search |
-| `WebFetchTool` | Fetch URL content |
-| `WebSearchTool` | Web search |
-| `AgentTool` | Sub-agent spawning |
-| `SkillTool` | Skill execution |
-| `MCPTool` | MCP server tool invocation |
-| `LSPTool` | Language Server Protocol integration |
-| `NotebookEditTool` | Jupyter notebook editing |
-| `TaskCreateTool` / `TaskUpdateTool` | Task creation and management |
-| `SendMessageTool` | Inter-agent messaging |
-| `TeamCreateTool` / `TeamDeleteTool` | Team agent management |
-| `EnterPlanModeTool` / `ExitPlanModeTool` | Plan mode toggle |
-| `EnterWorktreeTool` / `ExitWorktreeTool` | Git worktree isolation |
-| `ToolSearchTool` | Deferred tool discovery |
-| `CronCreateTool` | Scheduled trigger creation |
-| `RemoteTriggerTool` | Remote trigger |
-| `SleepTool` | Proactive mode wait |
-| `SyntheticOutputTool` | Structured output generation |
+### Build
 
-### 2. Command System (`src/commands/`)
+```bash
+git clone git@github.com:roger2ai/Claude-Code-Compiled.git
+cd Claude-Code-Compiled
 
-User-facing slash commands invoked with `/` prefix.
+# Install dependencies
+bun install
 
-| Command | Description |
-|---|---|
-| `/commit` | Create a git commit |
-| `/review` | Code review |
-| `/compact` | Context compression |
-| `/mcp` | MCP server management |
-| `/config` | Settings management |
-| `/doctor` | Environment diagnostics |
-| `/login` / `/logout` | Authentication |
-| `/memory` | Persistent memory management |
-| `/skills` | Skill management |
-| `/tasks` | Task management |
-| `/vim` | Vim mode toggle |
-| `/diff` | View changes |
-| `/cost` | Check usage cost |
-| `/theme` | Change theme |
-| `/context` | Context visualization |
-| `/pr_comments` | View PR comments |
-| `/resume` | Restore previous session |
-| `/share` | Share session |
-| `/desktop` | Desktop app handoff |
-| `/mobile` | Mobile app handoff |
+# Patch Commander.js (multi-char short flags not supported upstream)
+# See docs/BUILD.md §4.1 for details — needs re-apply after bun install
 
-### 3. Service Layer (`src/services/`)
+# Build
+bun build shims/macro.ts src/main.tsx --target=bun --outdir=./dist
 
-| Service | Description |
-|---|---|
-| `api/` | Anthropic API client, file API, bootstrap |
-| `mcp/` | Model Context Protocol server connection and management |
-| `oauth/` | OAuth 2.0 authentication flow |
-| `lsp/` | Language Server Protocol manager |
-| `analytics/` | GrowthBook-based feature flags and analytics |
-| `plugins/` | Plugin loader |
-| `compact/` | Conversation context compression |
-| `policyLimits/` | Organization policy limits |
-| `remoteManagedSettings/` | Remote managed settings |
-| `extractMemories/` | Automatic memory extraction |
-| `tokenEstimation.ts` | Token count estimation |
-| `teamMemorySync/` | Team memory synchronization |
-
-### 4. Bridge System (`src/bridge/`)
-
-A bidirectional communication layer connecting IDE extensions (VS Code, JetBrains) with the Claude Code CLI.
-
-- `bridgeMain.ts` — Bridge main loop
-- `bridgeMessaging.ts` — Message protocol
-- `bridgePermissionCallbacks.ts` — Permission callbacks
-- `replBridge.ts` — REPL session bridge
-- `jwtUtils.ts` — JWT-based authentication
-- `sessionRunner.ts` — Session execution management
-
-### 5. Permission System (`src/hooks/toolPermission/`)
-
-Checks permissions on every tool invocation. Either prompts the user for approval/denial or automatically resolves based on the configured permission mode (`default`, `plan`, `bypassPermissions`, `auto`, etc.).
-
-### 6. Feature Flags
-
-Dead code elimination via Bun's `bun:bundle` feature flags:
-
-```typescript
-import { feature } from 'bun:bundle'
-
-// Inactive code is completely stripped at build time
-const voiceCommand = feature('VOICE_MODE')
-  ? require('./commands/voice/index.js').default
-  : null
+# Bundle into single file
+cat dist/shims/macro.js dist/src/main.js > dist/bundle.js
+echo 'if (typeof main === "function") main().catch(e => { console.error(e); process.exit(1); });' >> dist/bundle.js
 ```
 
-Notable flags: `PROACTIVE`, `KAIROS`, `BRIDGE_MODE`, `DAEMON`, `VOICE_MODE`, `AGENT_TRIGGERS`, `MONITOR_TOOL`
+Output: `dist/bundle.js` (~23 MB, ~5,750 modules, ~300ms build time)
 
----
+### Run
 
-## Key Files in Detail
+```bash
+# Help (no API key needed)
+bun dist/bundle.js --help
 
-### `QueryEngine.ts` (~46K lines)
+# Interactive REPL (requires real terminal + API key)
+export ANTHROPIC_API_KEY=your-key
+bun dist/bundle.js
 
-The core engine for LLM API calls. Handles streaming responses, tool-call loops, thinking mode, retry logic, and token counting.
-
-### `Tool.ts` (~29K lines)
-
-Defines base types and interfaces for all tools — input schemas, permission models, and progress state types.
-
-### `commands.ts` (~25K lines)
-
-Manages registration and execution of all slash commands. Uses conditional imports to load different command sets per environment.
-
-### `main.tsx`
-
-Commander.js-based CLI parser + React/Ink renderer initialization. At startup, parallelizes MDM settings, keychain prefetch, and GrowthBook initialization for faster boot.
-
----
-
-## Tech Stack
-
-| Category | Technology |
-|---|---|
-| Runtime | [Bun](https://bun.sh) |
-| Language | TypeScript (strict) |
-| Terminal UI | [React](https://react.dev) + [Ink](https://github.com/vadimdemedes/ink) |
-| CLI Parsing | [Commander.js](https://github.com/tj/commander.js) (extra-typings) |
-| Schema Validation | [Zod v4](https://zod.dev) |
-| Code Search | [ripgrep](https://github.com/BurntSushi/ripgrep) (via GrepTool) |
-| Protocols | [MCP SDK](https://modelcontextprotocol.io), LSP |
-| API | [Anthropic SDK](https://docs.anthropic.com) |
-| Telemetry | OpenTelemetry + gRPC |
-| Feature Flags | GrowthBook |
-| Auth | OAuth 2.0, JWT, macOS Keychain |
-
----
-
-## Notable Design Patterns
-
-### Parallel Prefetch
-
-Startup time is optimized by prefetching MDM settings, keychain reads, and API preconnect in parallel — before heavy module evaluation begins.
-
-```typescript
-// main.tsx — fired as side-effects before other imports
-startMdmRawRead()
-startKeychainPrefetch()
+# One-shot mode
+bun dist/bundle.js -p "say hello"
 ```
 
-### Lazy Loading
+---
 
-Heavy modules (OpenTelemetry ~400KB, gRPC ~700KB) are deferred via dynamic `import()` until actually needed.
+## Project Structure
 
-### Agent Swarms
-
-Sub-agents are spawned via `AgentTool`, with `coordinator/` handling multi-agent orchestration. `TeamCreateTool` enables team-level parallel work.
-
-### Skill System
-
-Reusable workflows defined in `skills/` and executed through `SkillTool`. Users can add custom skills.
-
-### Plugin Architecture
-
-Built-in and third-party plugins are loaded through the `plugins/` subsystem.
+```
+claude-code/
+├── src/                  # Source (~1,900 TypeScript files, 512K+ lines)
+│   ├── main.tsx          # CLI entrypoint
+│   ├── QueryEngine.ts    # LLM query engine
+│   ├── Tool.ts           # Tool type definitions
+│   ├── tools/            # 43 tool implementations
+│   ├── commands/         # 80+ slash commands
+│   ├── components/       # 346 React/Ink UI components
+│   ├── services/         # 21 service modules
+│   ├── screens/          # Full-screen UIs (REPL, Doctor, etc.)
+│   └── utils/            # 290+ utility files
+├── shims/                # Bun compatibility shims
+├── docs/                 # Architecture & build documentation
+├── dist/                 # Build output (gitignored)
+└── package.json          # Dependencies (574 packages)
+```
 
 ---
 
-## Disclaimer
+## Documentation
 
-This repository archives source code that was leaked from Anthropic's npm registry on **2026-03-31**. All original source code is the property of [Anthropic](https://www.anthropic.com).
+| Document | Content |
+|----------|---------|
+| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Full architecture overview |
+| [docs/ARCHITECTURE-TOOLS.md](docs/ARCHITECTURE-TOOLS.md) | 43 tool implementations |
+| [docs/ARCHITECTURE-SERVICES.md](docs/ARCHITECTURE-SERVICES.md) | 21 service modules |
+| [docs/ARCHITECTURE-COMPONENTS.md](docs/ARCHITECTURE-COMPONENTS.md) | 346 UI components |
+| [docs/ARCHITECTURE-COMMANDS.md](docs/ARCHITECTURE-COMMANDS.md) | Commands, skills, plugins |
+| [docs/ARCHITECTURE-UTILS.md](docs/ARCHITECTURE-UTILS.md) | Utility layer |
+| [docs/ARCHITECTURE-BRIDGE-REMOTE.md](docs/ARCHITECTURE-BRIDGE-REMOTE.md) | IDE bridge & remote sessions |
+| [docs/API-CONFIG.md](docs/API-CONFIG.md) | API configuration (env vars, auth, proxies) |
+| [docs/BUILD.md](docs/BUILD.md) | Detailed build guide & all patches |
+| [docs/REFACTORING-ASSESSMENT.md](docs/REFACTORING-ASSESSMENT.md) | Refactoring feasibility analysis |
+
+---
+
+## Known Limitations
+
+1. **TUI requires a real terminal** — silent exit in pipes or non-TTY environments
+2. **API key required** — `ANTHROPIC_API_KEY` must be set for actual queries
+3. **Some tools are stubs** — REPLTool, WorkflowTool, etc. have empty implementations
+4. **macOS Keychain** — falls back to plaintext file on Linux
+5. **Sandbox on WSL2** — requires `apt install bubblewrap socat` for sandbox features
+6. **Commander.js patch** — multi-character short flags (`-d2e`) need a manual patch to `node_modules` after each `bun install`
+
+---
+
+## Original Source
+
+Leaked by [@Fried_rice](https://x.com/Fried_rice) on 2026-03-31. All original source code is the property of [Anthropic](https://www.anthropic.com). This repo exists solely as a compilable reference — not for production use.

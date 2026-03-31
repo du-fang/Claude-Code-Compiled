@@ -319,9 +319,17 @@ bun dist/bundle.js mcp list
 
 ---
 
-## 7. 架构文档
+## 7. 文档索引
 
-项目包含 7 份架构分析文档：
+### 7.1 API 配置
+
+完整的 API 配置指南（环境变量、认证方式、多云后端、代理、mTLS）：
+
+→ **[API-CONFIG.md](./API-CONFIG.md)**
+
+### 7.2 架构文档
+
+项目包含 8 份架构分析文档：
 
 | 文档 | 大小 | 内容 |
 |------|------|------|
@@ -333,6 +341,7 @@ bun dist/bundle.js mcp list
 | `ARCHITECTURE-UTILS.md` | 12KB | 290+ 工具文件 |
 | `ARCHITECTURE-BRIDGE-REMOTE.md` | 12KB | Bridge/Remote/Coordinator |
 | `REFACTORING-ASSESSMENT.md` | 12KB | 重构可行性评估 |
+| **`API-CONFIG.md`** | **10KB** | **API 配置完整参考** |
 
 ---
 
