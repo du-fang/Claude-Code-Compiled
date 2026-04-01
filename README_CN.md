@@ -239,8 +239,3 @@ claude-code/
 4. **WSL2 沙箱** — 需要 `apt install bubblewrap socat` 才能使用沙箱功能
 5. **Commander.js 补丁** — 多字符短标志（`-d2e`）每次 `bun install` 后需手动修补 `node_modules`
 
----
-
-## 原始来源
-
-源码由 [@Fried_rice](https://x.com/Fried_rice) 于 2026-03-31 泄露。所有原始源码归 [Anthropic](https://www.anthropic.com) 所有。本仓库仅作为可编译参考，不用于生产环境。

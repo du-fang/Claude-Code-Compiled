@@ -239,8 +239,3 @@ All `@ant/*` package references are behind `feature()` guards and tree-shaken at
 4. **Sandbox on WSL2** — requires `apt install bubblewrap socat` for sandbox features
 5. **Commander.js patch** — multi-character short flags (`-d2e`) need a manual patch to `node_modules` after each `bun install`
 
----
-
-## Original Source
-
-Leaked by [@Fried_rice](https://x.com/Fried_rice) on 2026-03-31. All original source code is the property of [Anthropic](https://www.anthropic.com). This repo exists solely as a compilable reference — not for production use.
