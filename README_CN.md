@@ -158,14 +158,86 @@ claude-code/
 
 ---
 
+## 功能完备性
+
+### 核心工具 — 全部正常 ✅
+
+| 工具 | 用途 |
+|------|------|
+| BashTool | 命令行执行 |
+| FileReadTool | 文件读取（图片、PDF、Notebook） |
+| FileWriteTool | 文件创建/覆盖 |
+| FileEditTool | 文件局部修改 |
+| GlobTool | 文件模式匹配 |
+| GrepTool | ripgrep 内容搜索 |
+| WebFetchTool | URL 内容抓取 |
+| WebSearchTool | 网页搜索 |
+| AgentTool | 子 Agent 调用 |
+| SkillTool | Skill 执行 |
+| NotebookEditTool | Jupyter Notebook 编辑 |
+| AskUserQuestionTool | 交互式提问 |
+| MCPTool | MCP 服务器工具调用 |
+| ListMcpResourcesTool / ReadMcpResourceTool | MCP 资源访问 |
+
+### 有条件启用的工具
+
+| 工具 | 启用条件 | 状态 |
+|------|----------|------|
+| LSPTool | 设置 `ENABLE_LSP_TOOL=true` | ✅ 可用 |
+| PowerShellTool | Windows 环境 | ✅ 可用 |
+| EnterWorktreeTool / ExitWorktreeTool | 配置开启 | ✅ 可用 |
+| TaskCreateTool 等 4 个 | 配置开启 | ✅ 可用 |
+| TeamCreateTool / TeamDeleteTool | Agent Swarms 配置 | ✅ 可用 |
+| ToolSearchTool | 配置开启 | ✅ 可用 |
+
+### 关闭的内部功能（80+ 个 feature flag）
+
+以下 Anthropic 内部实验性功能通过 `feature()` 标志关闭，不影响核心 CLI 使用：
+
+| 功能 | 影响 |
+|------|------|
+| Voice Mode（`VOICE_MODE`） | 语音输入不可用 |
+| Proactive Mode（`PROACTIVE`） | SleepTool、主动提醒不可用 |
+| Agent Swarms（`TEAMMEM`、`BG_SESSIONS`） | 多 Agent 协调不可用 |
+| Cron 调度（`AGENT_TRIGGERS`） | 定时触发器不可用 |
+| Computer Use（`CHICAGO_MCP`） | 桌面自动化不可用 — 需要 Anthropic 内部原生模块 |
+| Claude in Chrome（`CHICAGO_MCP`） | 浏览器集成不可用 |
+| KAIROS（`KAIROS`） | Anthropic 内部助手模式不可用 |
+| Transcript Classifier（`TRANSCRIPT_CLASSIFIER`） | 自动权限分类不可用 |
+
+### Stub 工具（自动过滤，零运行时影响）
+
+| 工具 | 原因 |
+|------|------|
+| REPLTool | `USER_TYPE=ant` 条件不满足 |
+| SuggestBackgroundPRTool | `USER_TYPE=ant` 条件不满足 |
+| VerifyPlanExecutionTool | `CLAUDE_CODE_VERIFY_PLAN` 未设置 |
+| WorkflowTool | `feature('WORKFLOW_SCRIPTS')` 返回 false |
+| TungstenTool | `USER_TYPE=ant` 条件不满足 |
+
+### 缺失的内部包（无运行时影响）
+
+所有 `@ant/*` 包引用都在 `feature()` 守卫的 dead code 分支内，编译时被完全剔除：
+
+| 包 | 用途 | 影响 |
+|------|------|------|
+| `@ant/claude-for-chrome-mcp` | Chrome 浏览器 MCP | 无 — dead code |
+| `@ant/computer-use-mcp` | Computer Use MCP | 无 — dead code |
+| `@ant/computer-use-input` | 鼠标/键盘控制 | 无 — dead code |
+| `@ant/computer-use-swift` | macOS 原生截图 | 无 — dead code |
+| `@anthropic-ai/claude-agent-sdk` | SDK 类型引用 | 无 — 仅 `import type` |
+
+**总结：所有核心 CLI 功能（文件操作、命令执行、搜索、API 调用、MCP 集成）均可正常使用。缺失的功能均为 Anthropic 内部实验性功能，在官方公开版本中同样不存在。**
+
+---
+
 ## 已知限制
 
 1. **TUI 需要真实终端** — 管道或非 TTY 环境下静默退出
 2. **需要 API key** — 实际对话必须设置 `ANTHROPIC_API_KEY`
-3. **部分工具是 stub** — REPLTool、WorkflowTool 等为空实现
-4. **macOS Keychain** — Linux 上回退到明文文件存储
-5. **WSL2 沙箱** — 需要 `apt install bubblewrap socat` 才能使用沙箱功能
-6. **Commander.js 补丁** — 多字符短标志（`-d2e`）每次 `bun install` 后需手动修补 `node_modules`
+3. **macOS Keychain** — Linux 上回退到明文文件存储
+4. **WSL2 沙箱** — 需要 `apt install bubblewrap socat` 才能使用沙箱功能
+5. **Commander.js 补丁** — 多字符短标志（`-d2e`）每次 `bun install` 后需手动修补 `node_modules`
 
 ---
 

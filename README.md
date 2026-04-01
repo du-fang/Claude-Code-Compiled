@@ -158,14 +158,86 @@ claude-code/
 
 ---
 
+## Feature Completeness
+
+### Core Tools — All Working ✅
+
+| Tool | Description |
+|------|-------------|
+| BashTool | Shell command execution |
+| FileReadTool | File reading (images, PDFs, notebooks) |
+| FileWriteTool | File creation / overwrite |
+| FileEditTool | Partial file modification |
+| GlobTool | File pattern matching |
+| GrepTool | ripgrep-based content search |
+| WebFetchTool | Fetch URL content |
+| WebSearchTool | Web search |
+| AgentTool | Sub-agent spawning |
+| SkillTool | Skill execution |
+| NotebookEditTool | Jupyter notebook editing |
+| AskUserQuestionTool | Interactive prompts |
+| MCPTool | MCP server tool invocation |
+| ListMcpResourcesTool / ReadMcpResourceTool | MCP resource access |
+
+### Conditionally Enabled Tools
+
+| Tool | Condition | Status |
+|------|-----------|--------|
+| LSPTool | Set `ENABLE_LSP_TOOL=true` | Works |
+| PowerShellTool | Windows environment | Works |
+| EnterWorktreeTool / ExitWorktreeTool | Config enabled | Works |
+| TaskCreateTool / TaskGetTool / TaskUpdateTool / TaskListTool | Config enabled | Works |
+| TeamCreateTool / TeamDeleteTool | Agent Swarms config | Works |
+| ToolSearchTool | Config enabled | Works |
+
+### Disabled Internal Features (80+ feature flags off)
+
+These Anthropic-internal experimental features are disabled via `feature()` flags and do not affect core CLI usage:
+
+| Feature | Impact |
+|---------|--------|
+| Voice Mode (`VOICE_MODE`) | Voice input unavailable |
+| Proactive Mode (`PROACTIVE`) | SleepTool, proactive alerts unavailable |
+| Agent Swarms (`TEAMMEM`, `BG_SESSIONS`) | Multi-agent coordination unavailable |
+| Cron Scheduling (`AGENT_TRIGGERS`) | Scheduled triggers unavailable |
+| Computer Use (`CHICAGO_MCP`) | Desktop automation unavailable — requires Anthropic internal native modules |
+| Claude in Chrome (`CHICAGO_MCP`) | Browser integration unavailable |
+| KAIROS (`KAIROS`) | Anthropic internal assistant mode unavailable |
+| Transcript Classifier (`TRANSCRIPT_CLASSIFIER`) | Auto permission classification unavailable |
+
+### Stub Tools (auto-filtered, zero runtime impact)
+
+| Tool | Reason |
+|------|--------|
+| REPLTool | Gated behind `USER_TYPE=ant` |
+| SuggestBackgroundPRTool | Gated behind `USER_TYPE=ant` |
+| VerifyPlanExecutionTool | Gated behind `CLAUDE_CODE_VERIFY_PLAN` |
+| WorkflowTool | Gated behind `feature('WORKFLOW_SCRIPTS')` |
+| TungstenTool | Gated behind `USER_TYPE=ant` |
+
+### Missing Internal Packages (no runtime impact)
+
+All `@ant/*` package references are behind `feature()` guards and tree-shaken at build time:
+
+| Package | Purpose | Impact |
+|---------|---------|--------|
+| `@ant/claude-for-chrome-mcp` | Chrome browser MCP | None — dead code |
+| `@ant/computer-use-mcp` | Computer Use MCP | None — dead code |
+| `@ant/computer-use-input` | Mouse/keyboard control | None — dead code |
+| `@ant/computer-use-swift` | macOS native screenshots | None — dead code |
+| `@anthropic-ai/claude-agent-sdk` | SDK type reference | None — `import type` only |
+
+**Summary: All core CLI functionality (file ops, commands, search, API calls, MCP) works. Missing features are Anthropic-internal experiments not available in the official release either.**
+
+---
+
 ## Known Limitations
 
 1. **TUI requires a real terminal** — silent exit in pipes or non-TTY environments
 2. **API key required** — `ANTHROPIC_API_KEY` must be set for actual queries
-3. **Some tools are stubs** — REPLTool, WorkflowTool, etc. have empty implementations
-4. **macOS Keychain** — falls back to plaintext file on Linux
-5. **Sandbox on WSL2** — requires `apt install bubblewrap socat` for sandbox features
-6. **Commander.js patch** — multi-character short flags (`-d2e`) need a manual patch to `node_modules` after each `bun install`
+3. **macOS Keychain** — falls back to plaintext file on Linux
+4. **Sandbox on WSL2** — requires `apt install bubblewrap socat` for sandbox features
+5. **Commander.js patch** — multi-character short flags (`-d2e`) need a manual patch to `node_modules` after each `bun install`
 
 ---
 
