@@ -117,3 +117,13 @@ STUBEOF
 fi
 
 echo "[postinstall] Stubs created."
+
+# ── Patch Commander.js for multi-char short flags ───────────────────────────
+OPTION_JS=$(find node_modules -path "*/commander/lib/option.js" -type f | head -1)
+if [ -n "$OPTION_JS" ]; then
+  # Patch 1: shortFlagExp — allow one or more chars after dash
+  sed -i "s|shortFlagExp = /\^-\\[^-\\]\\$/|shortFlagExp = /\^-[^-]+\$/|" "$OPTION_JS"
+  # Patch 2: disable single-char short flag restriction
+  sed -i "s|if (/\\^-\\[^-\\]\\[^-\\]/.test(unsupportedFlag))|if (false)|" "$OPTION_JS"
+  echo "[postinstall] Patched Commander.js for multi-char short flags"
+fi
